@@ -28,7 +28,7 @@ export async function getMarketData({ broker, startDate, endDate, instrumentType
   const difference = toTime - fromTime
 
   let count = 0
-  const amountOfCandles = 3000
+  const amountOfCandles = 3000 // max is 5000, so using 3000 to be safe - right choice?
   switch (timeframe) {
     case TIMEFRAME.D1:
       count = DAY * amountOfCandles
@@ -53,7 +53,7 @@ export async function getMarketData({ broker, startDate, endDate, instrumentType
   let to = getToTimeBasedOnInstrumentType(toTime, instrumentType)
   let iterationCount = 1
   do {
-    console.log(`Iteration ${iterationCount}. Remaining time: ${remainingTime}`)
+    console.log(`Iteration: ${iterationCount}. Remaining time: ${remainingTime}`)
 
     to = remainingTime > count ? from + count : from + remainingTime
 
@@ -65,6 +65,7 @@ export async function getMarketData({ broker, startDate, endDate, instrumentType
       // @ts-ignore-next-line: any error
       timeframe: timeframeOptions[timeframe][broker],
     }
+    console.log('what is timeframe: ' + marketDataParams.timeframe)
 
     // get market data
     const data =
