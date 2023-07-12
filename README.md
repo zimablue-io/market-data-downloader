@@ -15,8 +15,6 @@ The end result will be a csv document generated in the ./data directory, structu
 | "2021-11-04T05:00:00Z" | 62759 | 62763 | 60730 | 62154 | 756.0762  | 4254 | 61564.8690370098 |
 | "2021-11-05T05:00:00Z" | 62119 | 62634 | 60777 | 61241 | 626.4683  | 3091 | 61373.168184727  |
 
-[...]
-
 ## Getting Started
 
 You'll need valid credentials from Alpaca. Once you have them, create an `.env` file and add the following:
