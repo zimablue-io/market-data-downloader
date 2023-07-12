@@ -3,8 +3,8 @@ const inquirer = require('inquirer')
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 inquirer.registerPrompt('date', require('inquirer-date-prompt'))
 
-import { BROKER, INSTRUMENT_TYPE } from './constants'
-import { convertJsonToCsv } from './convert-json-to-csv'
+import { BROKER, INSTRUMENT_TYPE, TIMEFRAME, timeframeOptions } from './constants'
+import { getMarketData } from './get-market-data'
 import { getTickers } from './get-tickers'
 
 export type Answers = {
@@ -13,7 +13,7 @@ export type Answers = {
   ticker: string
   timeframe: string
   startDate: string
-  days: number
+  endDate: string
 }
 
 async function searchTickers(answers: Answers, input = '') {
@@ -66,23 +66,12 @@ inquirer
       message: 'What ticker?',
       source: searchTickers,
     },
-    // Branch 1: Alpaca
     {
       type: 'list',
       default: '1Hour',
       name: 'timeframe',
       message: 'What timeframe?',
-      choices: ['1Day', '1Hour', '15Min', '5Min', '1Min'],
-      when: (answers: Answers) => answers.broker === BROKER.ALPACA,
-    },
-    // Branch 2: Oanda
-    {
-      type: 'list',
-      default: 'H1',
-      name: 'timeframe',
-      message: 'What timeframe?',
-      choices: ['D', 'H1', 'M15', 'M5', 'M1'],
-      when: (answers: Answers) => answers.broker === BROKER.OANDA,
+      choices: [TIMEFRAME.D1, TIMEFRAME.H1, TIMEFRAME.MIN15, TIMEFRAME.MIN5],
     },
     {
       //https://github.com/haversnail/inquirer-date-prompt
@@ -90,32 +79,20 @@ inquirer
       name: 'startDate',
       message: 'What start date?',
     },
-    // TODO improve solution for days params
-    // Branch 1: Alpaca - alpaca uses end date instead of count param . Maybe just use calendar like in startDate???
     {
-      type: 'number',
-      name: 'days',
-      default: 365,
-      message: 'How many days?',
-      when: (answers: Answers) => answers.broker === BROKER.ALPACA,
-    },
-    // Branch 2: Oanda - oanda uses count param instead of end date
-    {
-      type: 'number',
-      name: 'days',
-      default: 500,
-      message: 'How many?',
-      validate: (input: number) => input > 0 && input < 5000,
-      when: (answers: Answers) => answers.broker === BROKER.OANDA,
+      //https://github.com/haversnail/inquirer-date-prompt
+      type: 'date',
+      name: 'endDate',
+      message: 'What end date?',
     },
   ])
   .then(async (answers: Answers) => {
-    await convertJsonToCsv({
+    await getMarketData({
       broker: answers.broker,
       instrumentType: answers.instrumentType,
       ticker: answers.ticker.toUpperCase(),
       timeframe: answers.timeframe,
       startDate: answers.startDate,
-      days: answers.days,
+      endDate: answers.endDate,
     })
   })

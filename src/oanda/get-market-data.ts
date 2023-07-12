@@ -1,5 +1,6 @@
-import { GetMarketDataParams, MarketData } from '../convert-json-to-csv'
-import { toRfcTime, toUnixTime } from '../lib/to-time'
+import { MarketData } from '../convert-json-to-csv'
+import { GetMarketDataParams } from '../get-market-data'
+import { toRfcTime } from '../lib/to-time'
 
 require('dotenv').config()
 const axios = require('axios')
@@ -16,11 +17,11 @@ type OandaMarketData = {
   volume: number
 }
 
-export async function getMarketData({
-  days,
+export async function getMarketDataFromOanda({
+  startDate,
+  endDate,
   ticker,
   timeframe,
-  startDate: selectedDate,
 }: GetMarketDataParams): Promise<MarketData[]> {
   console.log('Getting market data...')
 
@@ -28,17 +29,14 @@ export async function getMarketData({
   const price = 'price=M'
   const granularity = `granularity=${timeframe}`
 
-  // FIXME - add calculation for count (at the moment in main.js it's just asked for count - instead of days. So input should be ok)
-  const count = `count=${days}`
-
-  const timestamp = toUnixTime(selectedDate)
-  const from = `from=${toRfcTime(timestamp)}`
+  const from = `from=${toRfcTime(startDate)}`
+  const to = `to=${toRfcTime(endDate)}`
 
   try {
     const response = await axios({
       method: 'GET',
       // TODO set start date
-      url: `https://api-fxtrade.oanda.com/v3/instruments/${ticker}/candles?${count}&${granularity}&${price}&${dailyAlignment}&${from}`,
+      url: `https://api-fxtrade.oanda.com/v3/instruments/${ticker}/candles?${granularity}&${price}&${dailyAlignment}&${from}&${to}`,
       headers: {
         Authorization: `Bearer ${process.env.OANDA_SECRET_KEY}`,
         'Accept-Datetime-Format': 'RFC3339',

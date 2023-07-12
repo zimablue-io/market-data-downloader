@@ -1,45 +1,12 @@
 import { INSTRUMENT_TYPE } from '../constants'
-import { GetMarketDataParams, MarketData } from '../convert-json-to-csv'
-import { toRfcTime, toUnixTime } from '../lib/to-time'
+import { MarketData } from '../convert-json-to-csv'
+import { GetMarketDataParams } from '../get-market-data'
+import { toRfcTime } from '../lib/to-time'
 
 require('dotenv').config()
 const axios = require('axios')
-const moment = require('moment')
 
-type AlpacaMarketData = {
-  t: string
-  o: number
-  h: number
-  l: number
-  c: number
-  v: number
-  n: number
-  vw: number
-}
-
-function toAlpacaMarketDataEndpoint({
-  startDate: selectedDate,
-  ticker,
-  days,
-  timeframe,
-  instrumentType,
-}: GetMarketDataParams) {
-  const timestamp = toUnixTime(selectedDate)
-  // TODO extract moment logic to lib
-  const shouldOffset = moment.unix(timestamp).isBefore(moment().subtract(days, 'days'))
-
-  const startDate = `start=${toRfcTime(timestamp)}`
-  const endDate = shouldOffset ? `&end=${toRfcTime(timestamp, days)}` : ''
-
-  const endpoint = 'https://data.alpaca.markets'
-
-  const cryptoUrl = `${endpoint}/v1beta2/crypto/bars?symbols=${ticker}&timeframe=${timeframe}&${startDate}${endDate}`
-  const stocksUrl = `${endpoint}/v2/stocks/${ticker}/bars?${startDate}${endDate}&timeframe=${timeframe}`
-
-  return instrumentType === 'stocks' ? stocksUrl : cryptoUrl
-}
-
-export async function getMarketData(marketDataParams: GetMarketDataParams): Promise<MarketData[]> {
+export async function getMarketDataFromAlpaca(marketDataParams: GetMarketDataParams): Promise<MarketData[]> {
   console.log('Getting market data...')
 
   const url = toAlpacaMarketDataEndpoint(marketDataParams)
@@ -67,4 +34,19 @@ export async function getMarketData(marketDataParams: GetMarketDataParams): Prom
       console.log(err.message)
     }
   }
+}
+
+function toAlpacaMarketDataEndpoint({ startDate, endDate, ticker, timeframe, instrumentType }: GetMarketDataParams) {
+  const endpoint = 'https://data.alpaca.markets'
+
+  const from = `start=${toRfcTime(startDate)}`
+  const to = `end=${toRfcTime(endDate)}`
+
+  const granularity = `timeframe=${timeframe}`
+
+  // Alpaca's api endpoints are different for crypto and stocks
+  const cryptoUrl = `${endpoint}/v1beta2/crypto/bars?symbols=${ticker}&${granularity}&${from}&${to}`
+  const stocksUrl = `${endpoint}/v2/stocks/${ticker}/bars?${from}&${to}&${granularity}`
+
+  return instrumentType === 'stocks' ? stocksUrl : cryptoUrl
 }
