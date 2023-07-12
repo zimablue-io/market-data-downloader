@@ -1,3 +1,8 @@
+###
+# Get a list of all the tickers in an etf to use for CLI autocomplete
+###
+
+# Credits: 
 # https://tcoil.info/how-to-get-list-of-companies-in-sp-500-with-python/
 
 from traceback import print_tb
